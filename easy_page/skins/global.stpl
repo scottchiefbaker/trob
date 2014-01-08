@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>{$page_title}</title>
+
+		<script type="text/javascript" src="js/jquery.js"></script>
+		{foreach from=$_js_scripts item=file}
+		<script type="text/javascript" src="{$file}"></script>
+		{/foreach}
+
+		<link rel="stylesheet" type="text/css" media="screen" href="css/default.css" title="Default" />
+
+		{foreach from=$_css_scripts item=file}
+		<link rel="stylesheet" type="text/css" media="screen" href="{$file}" />
+		{/foreach}
+	</head>
+<body>
+
+<div id="content_box">
+	<h2 id="header">{if $header}{$header}{else}&nbsp;{/if}</h2>
+
+	<div id="content">{include file="$template_file"}</div>
+
+	{if $template_variable_debug}
+	<div style="padding: 0 0.5em 0 0.5em;" id="debug_output">
+		<hr />
+		<div style="font-size: 0.75em;"><b><i>Smarty Template Variables:</b></i></div>
+		<div>{$template_variable_debug}</div>
+	</div>
+	{/if}
+
+	<div id="footer">
+		<div id="footer_left">Rendered in <b>{$total_time}</b> seconds</div>
+		<div id="footer_right">
+		{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){else}&nbsp;{/if}
+		</div>
+		<div style="clear: both;"></div>
+	</div>
+
+</div>
+
+</body>

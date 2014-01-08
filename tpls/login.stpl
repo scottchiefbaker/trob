@@ -1,0 +1,17 @@
+<div>
+	<div class="warning">{$error}</div>
+
+	<form method="post">
+		<div class="group">
+			<div>Email Address:</div>
+			<div><input type="text" name="username" /></div>
+		</div>
+
+		<div class="group">
+			<div>Password:</div>
+			<div><input type="password" name="password" /></div>
+		</div>
+
+		<div class="group"><input type="submit" value="Login" /></div>
+	</form>
+</div>

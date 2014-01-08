@@ -1,0 +1,5 @@
+<!-- Hello world goes here -->
+
+<h1 class="center">index.stpl</h1>
+
+{$output}
