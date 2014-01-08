@@ -17,7 +17,6 @@ class page {
 
 		$this->base_dir = __DIR__ . "/";
 		$this->skin_dir = $this->base_dir . "/skins/";
-		//$this->sub_dir  = dirname($_SERVER['SCRIPT_NAME']) . "/";
 
 		session_start();
 
@@ -25,8 +24,6 @@ class page {
 		$this->smarty->compile_dir  = "tpls/compiled/";
 		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
 		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
-
-		//if ($_GET['debug']) { krumo($this); }
 
 		if ($opts['require_https'] && $_SERVER['HTTPS'] != 'on') {
 			print "You must access this site with SSL";
