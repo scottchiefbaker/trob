@@ -110,6 +110,23 @@ class page {
 		$this->smarty->display($this->skin_dir . "/global.stpl");
 	}
 
+	function calculate_relative_path($file, $return_dir = 0) {
+		// We find the document root of the webserver
+		$doc_root = $_SERVER['DOCUMENT_ROOT'];
+
+		// Remove the document root, from the FULL absolute path of the
+		// file we're looking for
+		$ret = "/" . str_replace($doc_root,"",$file,$ok);
+		if (!$ok) { return '/krumo/'; }
+
+		// If they want the path to the dir, only return the dir part
+		if ($return_dir) { $ret = dirname($ret) . "/"; }
+
+		#print "$file => $ret"; exit;
+
+		return $ret;
+	}
+
 	function test() {
 		return "foobar " . $this->foo;
 	}
