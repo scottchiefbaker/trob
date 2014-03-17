@@ -105,9 +105,24 @@ class page {
 			$this->assign('template_variable_debug',$debug_html);
 		}
 
+		if (!is_writeable($this->smarty->compile_dir)) {
+			$str = "Cannot write to the compiled directory '" . $this->smarty->compile_dir . "'";
+			$this->error_out($str,11026);
+		}
+
 		// Actually send the HTML to the browser
 		$this->assign('template_file',$tpl);
 		$this->smarty->display($this->skin_dir . "/global.stpl");
+	}
+
+	function error_out($str,$num = '') {
+		if ($num) {
+			$str .= " (ErrorNumber: $num)";
+		}
+
+		print "<p><b>Error:</b> $str</p>";
+
+		exit;
 	}
 
 	function calculate_relative_path($file, $return_dir = 0) {
