@@ -106,8 +106,12 @@ class page {
 		}
 
 		if (!is_writeable($this->smarty->compile_dir)) {
-			$str = "Cannot write to the compiled directory '" . $this->smarty->compile_dir . "'";
-			$this->error_out($str,11026);
+			$path = $_SERVER['DOCUMENT_ROOT'] . $_SERVER['REQUEST_URI'] . $this->smarty->compile_dir;
+			$path = preg_replace("/\/\//","/",$path);
+
+			$str  = "Cannot write to the compiled directory";
+			$str .= "<p><b>Fix:</b> <code>chmod a+w $path</code></p>";
+			$this->error_out($str);
 		}
 
 		// Actually send the HTML to the browser
