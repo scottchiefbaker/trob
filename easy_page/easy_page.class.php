@@ -9,11 +9,15 @@ require("$conf_dir/include/db_query/db_query.inc.php");
 class page {
 	public $require_https = false;
 	public $require_login = false;
+	public $plugins       = array();
+	public $plugin_dir    = "";
+	public $page_title    = "";
 
 	function page($opts = array()) {
-		$this->smarty = new Smarty();
+		$this->smarty     = new Smarty();
 		$this->start_time = microtime(1);
 		$this->dbq        = new db_query();
+		$this->plugin_dir = dirname(__FILE__) . "/plugins/";
 
 		$this->base_dir = __DIR__ . "/";
 		$this->skin_dir = $this->base_dir . "/skins/";
@@ -80,13 +84,20 @@ class page {
 			$i = pathinfo($_SERVER['SCRIPT_NAME']);
 			$tpl = $i['filename'] . ".stpl";
 
-			$tpl = $this->tpl_dir . "$tpl";
+			$tpl = $this->tpl_dir . $tpl;
+
+			$tpl_file = $this->smarty->template_dir[0] . $tpl;
+
+			if (!is_readable($tpl_file)) {
+				$this->error_out("Cannot read template file \"$tpl_file\"");
+			}
 		}
 
 		$debug = $_GET['debug'];
 
 		$this->assign('_js_scripts',$this->_js);
 		$this->assign('_css_scripts',$this->_css);
+		$this->assign('page_title',$this->page_title);
 
 		$this->end_time = microtime(1);
 
@@ -117,6 +128,8 @@ class page {
 		// Actually send the HTML to the browser
 		$this->assign('template_file',$tpl);
 		$this->smarty->display($this->skin_dir . "/global.stpl");
+
+		exit;
 	}
 
 	function error_out($str,$num = '') {
@@ -148,6 +161,34 @@ class page {
 
 	function test() {
 		return "foobar " . $this->foo;
+	}
+
+	// Load a plugin
+	function plugin_load($class_name, $opts = "") {
+		$plugin_file = $this->plugin_dir . "/$class_name.inc.php";
+		include_once($plugin_file);
+
+		if ($opts) {
+			$this->$class_name = new $class_name($this,$opts);
+		} else {
+			$this->$class_name = new $class_name($this);
+		}
+
+		//print "Loaded plugin $class_name<br />";
+
+		$this->plugins[$class_name] = 1;
+	}
+
+	function __get($name) {
+		$plugin_file = $this->plugin_dir . "/$name.inc.php";
+
+		if (is_readable($plugin_file)) {
+			$this->plugin_load($name);
+
+			return $this->$name;
+		} else {
+			return null;
+		}
 	}
 
 }
