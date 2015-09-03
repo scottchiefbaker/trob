@@ -1,4 +1,4 @@
-<?PHP
+<?php
 
 $conf_dir = __DIR__;
 
@@ -192,5 +192,3 @@ class page {
 	}
 
 }
-
-?>
