@@ -6,6 +6,28 @@ require("$conf_dir/include/Smarty-3.1.17/libs/Smarty.class.php");
 require("$conf_dir/include/krumo/class.krumo.php");
 require("$conf_dir/include/db_query/db_query.inc.php");
 
+// Borrowed from : https://github.com/igorw/get-in
+// Discussion    : http://nikic.github.io/2014/01/10/The-case-against-the-ifsetor-function.html
+function get_in(array $array, array $keys, $default = null) {
+	if (!$keys) {
+		return $array;
+	}
+
+	// This is a micro-optimization, it is fast for non-nested keys, but fails for null values
+	if (count($keys) === 1 && isset($array[$keys[0]])) {
+		return $array[$keys[0]];
+	}
+	$current = $array;
+	foreach ($keys as $key) {
+		if (!array_key_exists($key, $current)) {
+			return $default;
+		}
+		$current = $current[$key];
+	}
+
+	return $current;
+}
+
 class page {
 	public $require_https = false;
 	public $require_login = false;
@@ -29,12 +51,12 @@ class page {
 		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
 		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
 
-		if ($opts['require_https'] && $_SERVER['HTTPS'] != 'on') {
+		if (isset($opts['require_https']) && $_SERVER['HTTPS'] != 'on') {
 			print "You must access this site with SSL";
 			exit;
 		}
 
-		if ($opts['require_login'] && !$this->is_logged_in()) {
+		if (isset($opts['require_login']) && !$this->is_logged_in()) {
 			print "<h1>404 - Page not found</h1>";
 		}
 	}
@@ -93,7 +115,7 @@ class page {
 			}
 		}
 
-		$debug = $_GET['debug'];
+		$debug = get_in($_GET,['debug']);
 
 		$this->assign('_js_scripts',$this->_js);
 		$this->assign('_css_scripts',$this->_css);
@@ -103,7 +125,7 @@ class page {
 
 		$total_time = sprintf("%.3f",$this->end_time - $this->start_time);
 		$this->assign('total_time',$total_time);
-		$this->assign('logged_in_user',$_SESSION['username']);
+		$this->assign('logged_in_user',get_in($_SESSION,['username']));
 
 		if ($debug) {
 			$smarty_tpl_vars = $this->smarty->getTemplateVars();
