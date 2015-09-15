@@ -107,12 +107,12 @@ class page {
 			$tpl = $i['filename'] . ".stpl";
 
 			$tpl = $this->tpl_dir . $tpl;
+		}
 
-			$tpl_file = $this->smarty->template_dir[0] . $tpl;
+		$tpl_file = $this->smarty->template_dir[0] . $tpl;
 
-			if (!is_readable($tpl_file)) {
-				$this->error_out("Cannot read template file \"$tpl_file\"");
-			}
+		if (!is_readable($tpl_file)) {
+			$this->error_out("Cannot read template file \"$tpl_file\"");
 		}
 
 		$debug = get_in($_GET,['debug']);
