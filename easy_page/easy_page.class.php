@@ -110,9 +110,8 @@ class page {
 		}
 
 		$tpl_file = $this->smarty->template_dir[0] . $tpl;
-
 		if (!is_readable($tpl_file)) {
-			$this->error_out("Cannot read template file \"$tpl_file\"");
+			$this->error_out("Cannot read template file \"$tpl_file\"",59186);
 		}
 
 		$debug = get_in($_GET,['debug']);
@@ -139,12 +138,12 @@ class page {
 		}
 
 		if (!is_writeable($this->smarty->compile_dir)) {
-			$path = $_SERVER['DOCUMENT_ROOT'] . $_SERVER['REQUEST_URI'] . $this->smarty->compile_dir;
+			$path = $_SERVER['DOCUMENT_ROOT'] . "/" . dirname($_SERVER['SCRIPT_NAME']) . "/" . $this->smarty->compile_dir;
 			$path = preg_replace("/\/\//","/",$path);
 
 			$str  = "Cannot write to the compiled directory";
-			$str .= "<p><b>Fix:</b> <code>chmod a+w $path</code></p>";
-			$this->error_out($str);
+			$str .= "<p><b>Fix:</b> <code>chmod a+rwx $path</code></p>";
+			$this->error_out($str,35146);
 		}
 
 		// Actually send the HTML to the browser
@@ -156,10 +155,10 @@ class page {
 
 	function error_out($str,$num = '') {
 		if ($num) {
-			$str .= " (ErrorNumber: $num)";
+			print "<p><b>Error #$num:</b> $str</p>";
+		} else {
+			print "<p><b>Error:</b> $str</p>";
 		}
-
-		print "<p><b>Error:</b> $str</p>";
 
 		exit;
 	}
