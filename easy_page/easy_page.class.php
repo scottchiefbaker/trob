@@ -2,7 +2,7 @@
 
 $conf_dir = __DIR__;
 
-require("$conf_dir/include/Smarty-3.1.17/libs/Smarty.class.php");
+require("$conf_dir/include/smarty/libs/Smarty.class.php");
 require("$conf_dir/include/krumo/class.krumo.php");
 require("$conf_dir/include/db_query/db_query.inc.php");
 
