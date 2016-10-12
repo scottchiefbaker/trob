@@ -35,7 +35,7 @@ class page {
 	public $plugin_dir    = "";
 	public $page_title    = "";
 
-	function page($opts = array()) {
+	function __construct($opts = array()) {
 		$this->smarty     = new Smarty();
 		$this->start_time = microtime(1);
 		$this->dbq        = new db_query();
