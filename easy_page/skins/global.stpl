@@ -17,11 +17,11 @@
 <body>
 
 <div id="content_box">
-	<h2 id="header">{if $header}{$header}{else}&nbsp;{/if}</h2>
+	<h2 id="header">{if !empty($header)}{$header}{else}&nbsp;{/if}</h2>
 
 	<div id="content">{include file="$template_file"}</div>
 
-	{if $template_variable_debug}
+	{if !empty($template_variable_debug)}
 	<div style="padding: 0 0.5em 0 0.5em;" id="debug_output">
 		<hr />
 		<div style="font-size: 0.75em;"><b><i>Smarty Template Variables:</b></i></div>
