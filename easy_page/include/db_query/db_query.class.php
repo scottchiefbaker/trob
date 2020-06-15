@@ -1,36 +1,58 @@
-<?PHP
+<?php
+
+define("DB_QUERY_VERSION","1.0.0");
 
 //////////////////////////////////////////////////////////////////////////////
 
-// If you would like to log queries, define a writable log path here
-if (!defined('DB_QUERY_LOG')) {
-	define('DB_QUERY_LOG',"");
-}
-
-//////////////////////////////////////////////////////////////////////////////
-
-// This is extended and called 'db_query' in the config class
-class db_core {
+class DBQuery {
 	var $debug                   = 0;
 	var $show_errors             = 1;   // If this is set to zero be silent about all errors
 	var $slow_query_time         = 0.1; // Highlight queries that takes longer than this
 	var $external_error_function = "";  // Override the built in error function
 	var $db_name                 = "";  // Placeholder
+	var $dbh_cache               = [];
+	var $dbh                     = null;
+	var $query_log               = "";
 
-	public function init_db_core($db = "") {
-		if ($db) { $this->db($db); }
+	private $dsn           = "";
+	private $user          = "";
+	private $pass          = "";
+	private $delay_connect = false;
+
+	public function __construct($dsn,$user = "",$pass = "",$opts = []) {
+		// Delay connection until the first query
+		$delay_connect = $opts['delay_connect'] ?? false;
+
+		$this->dsn           = $dsn;
+		$this->user          = $user;
+		$this->pass          = $pass;
+		$this->delay_connect = $delay_connect;
+
+		// If we're not delaying connect right now
+		if (!$delay_connect) {
+			$this->connect_db($dsn,$user,$pass);
+		}
+	}
+
+	public function connect_db($dsn,$user = "",$pass = "") {
+		$ret = new PDO($dsn,$user,$pass);
+
+		if ($ret) {
+			$this->dbh = $ret;
+		}
+
+		return $ret;
 	}
 
 	public function query($sql = "",$return_type = "",$third = '') {
+		// If we're delaying and we don't already have a DB handle
+		if ($this->delay_connect && !$this->dbh) {
+			$ok = $this->connect_db($this->dsn, $this->user, $this->pass);
+		}
+
 		$start = microtime(1);
 		$sql   = trim($sql);
 
-		if ($return_type === "no_error") {
-			$this->show_errors = 0;
-		}
-
-		// If we're not connected to a DB connect to the default one
-		if (!$this->dbh) { $this->db('default'); } // Connect to the default DB
 		$dbh = $this->dbh;
 
 		// Test if the DB connection is there
@@ -41,7 +63,13 @@ class db_core {
 		$prepare_values = array();
 		if (is_array($return_type)) {
 			$prepare_values = $return_type;
-			$return_type = $third;
+			$return_type    = $third;
+		}
+
+		if ($return_type === "no_error" || !$this->show_errors) {
+			$show_errors = 0;
+		} else {
+			$show_errors = 1;
 		}
 
 		if (!$sql && !$this->sth) { return array(); } // Nothing to do and no cached STH
@@ -58,7 +86,7 @@ class db_core {
 				list($sql_error_code,$driver_error_code,$err_text) = $dbh->errorInfo();
 
 				// We couldn't make a STH, probably bad SQL
-				if (!$this->show_errors) {
+				if (!$show_errors) {
 					$info = array(
 						'sql'              => $sql,
 						'error_text'       => $err_text,
@@ -99,10 +127,8 @@ class db_core {
 			// Do nothing we already have the statement handle
 		}
 
-		$total = microtime(1) - $start;
-
 		// Check for non "00000" error status
-		if ($this->show_errors && $has_error) {
+		if ($show_errors && $has_error) {
 			$html_sql = "<pre>" . $this->sql_clean($sql) . "</pre>";
 			$err_text = $err[2];
 
@@ -129,6 +155,8 @@ class db_core {
 
 			$this->sth = $sth; // Cache the $sth
 			$this->sql = $sql;
+
+			$total = microtime(1) - $start;
 
 			$info = array(
 				'sql'              => $sql,
@@ -166,7 +194,7 @@ class db_core {
 		/////////////////////////////////////////////
 		// Be smart about what we're going to return
 		/////////////////////////////////////////////
-		if (!$this->show_errors && $has_error) { // Has to be the first to test for error status
+		if (!$show_errors && $has_error) { // Has to be the first to test for error status
 			return false;
 		} elseif ($return_type == 'one_data') {
 			$ret = $sth->fetch(PDO::FETCH_NUM); // Get the first row
@@ -174,6 +202,7 @@ class db_core {
 
 			// If nothing is in the record set, return an empty string
 			if (!isset($ret)) { $ret = ''; }
+			$return_recs = 1;
 		} elseif ($return_type == 'info_list') {
 			while ($data = $sth->fetch(PDO::FETCH_NUM)) {
 				$ret[] = $data;
@@ -261,18 +290,22 @@ class db_core {
 			if (!$ret) { $ret = true; }
 
 			$return_type = 'insert_id';
+			$return_recs = 1;
 		} elseif ($return_type == 'affected_rows' || preg_match("/^(DELETE|UPDATE|REPLACE|TRUNCATE)/i",$sql)) {
-			$ret = $affected_rows;
+			$ret         = $affected_rows;
 			$return_type = 'affected_rows';
+			$return_recs = 1;
 		} elseif (preg_match("/^(LOCK|UNLOCK)/i",$sql)) {
 			$return_type = 'lock/unlock';
-			$ret = 1;
+			$ret         = 1;
+			$return_recs = 1;
 		} elseif (preg_match("/^(CREATE|DROP)/i",$sql)) {
 			$return_type = 'create/drop';
-			$ret = 1;
+			$ret         = 1;
+			$return_recs = 1;
 		} else {
 			// If we're not showing errors, just return false
-			if (!$this->show_errors) { return false; }
+			if (!$show_errors) { return false; }
 
 			$html_sql = "<pre>" . $this->sql_clean($sql) . "</pre>";
 			$error    = "<div>Not sure about the return type for this SQL</div><br >\n<div>";
@@ -282,11 +315,18 @@ class db_core {
 			$this->error_out($error);
 		}
 
+		$total = microtime(1) - $start;
+
 		// Store some info about this query
 		if (!isset($return_recs)) {
 			if (!isset($ret)) {
 				$return_recs = 0;
 			} else {
+				if (!is_array($ret)) {
+					print "$sql\n";
+					print_r($ret);
+					print "\n";
+				}
 				$return_recs = sizeof($ret);
 			}
 			if (isset($insert_id)) { $return_recs .= " (#$insert_id)"; }
@@ -317,15 +357,15 @@ class db_core {
 		$this->db_query_info[] = $info;
 
 		// Log to a file if need be
-		if (defined('DB_QUERY_LOG') && is_writable(DB_QUERY_LOG)) {
-			$sql_log = DB_QUERY_LOG;
-			$fp = @fopen($sql_log,"a");
+		if (!empty($this->query_log) && is_writable($this->query_log)) {
+			$sql_log = $this->query_log;
+			$fp      = @fopen($sql_log,"a");
 
 			$sql = preg_replace("/\n|\r/","",$sql); // Make it all one line
 			$sql = preg_replace("/\s+/"," ",$sql); // Remove double spaces
 
 			$date = date("Y-m-d H:i:s");
-			$str = "\"$date\",\"$sql\",\"$total\",\"$return_recs\"\n";
+			$str  = "\"$date\",\"$sql\",\"$total\",\"$return_recs\"\n";
 
 			if ($fp) {
 				fwrite($fp,$str);
@@ -377,7 +417,9 @@ class db_core {
 	}
 
 	public function query_summary() {
-		if (!$this->db_query_info) { return ""; }
+		if (empty($this->db_query_info)) {
+			return "";
+		}
 
 		$count      = 0;
 		$total_time = 0;
@@ -416,7 +458,7 @@ class db_core {
 			$query_time = sprintf("%0.3f",$item['exec_time']);
 
 			$ret .= "<table title=\"$query_title\" style=\"width: 100%; border-collapse: collapse; border: 1px solid; margin-bottom: 1em;\">\n";
-			$ret .= "\t<tr style=\"background-color: $row_color; color: black; text-align: center; font-size: 0.8em;\">\n";
+			$ret .= "\t<tr style=\"background-color: $row_color; color: black; text-align: center;\">\n";
 			$ret .= "\t\t<td style=\"width: 8%; border: 1px solid;\"><b>#$count</b>$dbn</td>\n";
 			$ret .= "\t\t<td style=\"width: 15%; border: 1px solid;\">Time: <b>$query_time seconds</b></td>\n";
 			$ret .= "\t\t<td style=\"width: 37%; border: 1px solid;\"><b>{$item['called_from_file']}</b> line <b>#{$item['called_from_line']}</b>$my_count</td>\n";
@@ -424,7 +466,7 @@ class db_core {
 			$ret .= "\t\t<td style=\"width: 20%; border: 1px solid;\">Returned: <b>{$item['records_returned']}</b></td>\n";
 			$ret .= "\t</tr>\n";
 			$ret .= "\t<tr>\n";
-			$ret .= "\t\t<td colspan=\"5\"><div style=\"font-family: monospace; background-color: $sql_bg; color: black; font-size: 1.2em; padding: .2em;\">" . nl2br($this->sql_clean($item['sql'])) . "</div></td>\n";
+			$ret .= "\t\t<td colspan=\"5\"><div style=\"font-family: monospace; background-color: $sql_bg; color: black; padding: 5px;\">" . nl2br($this->sql_clean($item['sql'])) . "</div></td>\n";
 			if ($item['parameter_values']) {
 				$colors = array('#DCDCDC','#F6F6F6');
 
@@ -439,7 +481,7 @@ class db_core {
 					$color = $colors[$value_count % sizeof($colors)];
 					$item2 = "<span style=\"background-color: $color\">$item2</span>";
 				}
-				$ret .= "\t\t<tr><td colspan=\"5\" style=\"font-size: 0.8em;\"><div class=\"wide\"><b>Values</b>: " . join(" ", $item['parameter_values']) . "</div></td></tr>\n";
+				$ret .= "\t\t<tr  style=\"border-top: 1px solid #bbb; background-color: $sql_bg;\"><td colspan=\"5\" style=\"padding: 5px\"><div class=\"wide\"><b>Values</b>: " . join(" ", $item['parameter_values']) . "</div></td></tr>\n";
 			}
 			$ret .= "\t</tr>\n";
 
@@ -491,48 +533,12 @@ class db_core {
 		return $ret;
 	}
 
-	public function db($name = "",$u = "",$p = "") {
-		// Get the name of the connected DB
-		if (!$name) {
-			if (isset($this->{'dbh_cache'}->{$name})) {
-				$name = $this->{'dbh_cache'}->{$name};
-				return $name;
-			} else {
-				return false;
-			}
-		}
-
-		// If $name is already cached use that
-		if (isset($this->{'dbh_cache'}->{$name})) {
-			$dbh = $this->{'dbh_cache'}->{$name};
-			$this->debug_log("Cache hit on '$name'");
-		} else {
-			list($dbh,$names) = $this->db_connect($name,$u,$p);
-			$this->debug_log("Cache miss on '$name'");
-
-			// If the DBH isn't already cache add it to the cache
-			foreach ($names as $name) {
-				if (!isset($this->{'dbh_cache'}->{$name})) { $this->{'dbh_cache'}->{$name} = &$dbh; }
-			}
-		}
-
-		$this->dbh = $dbh;
-
-		if (preg_match("/\w+:/",$name)) { $name = "DSN"; }
-		$this->db_name = $name;
-
-		return $dbh;
-	}
-
 	public function debug_log($str) {
 		if ($this->debug) { print "<div>$str</div>\n"; }
 	}
 
 	public function quote($str) {
 		return $this->dbh->quote($str);
-	}
-
-	function __destruct() {
 	}
 
 	public function begin() {
@@ -565,20 +571,4 @@ class db_core {
 
 		return false;
 	}
-
 }
-
-$dbq_config = __DIR__ . '/db_query.config.php';
-
-if (is_readable($dbq_config)) {
-	// Extend the class by adding all the config options
-	require('db_query.config.php');
-} elseif (is_readable(__DIR__ . "/db_query.config.php.sample")) {
-	$dbq = new db_core;
-	$dbq->error_out("Missing config. Please rename db_query.config.php.sample to db_query.config.php after you make appropriate changes");
-} else {
-	$dbq = new db_core;
-	$dbq->error_out("Missing config.");
-}
-
-?>
