@@ -4,7 +4,7 @@ $conf_dir = __DIR__;
 
 require("$conf_dir/include/smarty/libs/Smarty.class.php");
 require("$conf_dir/include/krumo/class.krumo.php");
-require("$conf_dir/include/db_query/db_query.inc.php");
+require("$conf_dir/include/db_query/db_query.class.php");
 
 // Borrowed from : https://github.com/igorw/get-in
 // Discussion    : http://nikic.github.io/2014/01/10/The-case-against-the-ifsetor-function.html
@@ -38,11 +38,19 @@ class page {
 	function __construct($opts = array()) {
 		$this->smarty     = new Smarty();
 		$this->start_time = microtime(1);
-		$this->dbq        = new db_query();
 		$this->plugin_dir = dirname(__FILE__) . "/plugins/";
+		$this->base_dir   = __DIR__ . "/";
+		$this->skin_dir   = $this->base_dir . "/skins/";
+		$this->config     = $this->load_config();
 
-		$this->base_dir = __DIR__ . "/";
-		$this->skin_dir = $this->base_dir . "/skins/";
+		$db_config = $this->config['database'] ?? [];
+
+		if ($db_config) {
+			$dsn  = $db_config['dsn']      ?? "";
+			$user = $db_config['username'] ?? null;
+			$pass = $db_config['password'] ?? null;
+			$this->dbq = new DBQuery($dsn, $user, $pass);
+		}
 
 		session_start();
 
@@ -210,6 +218,17 @@ class page {
 		} else {
 			return null;
 		}
+	}
+
+	function load_config() {
+		$file = $this->base_dir . "/config.ini";
+		if (!is_readable($file)) {
+			return null;
+		}
+
+		$ret = parse_ini_file($file, true);
+
+		return $ret;
 	}
 
 }
