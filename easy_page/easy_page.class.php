@@ -145,9 +145,16 @@ class page {
 			$this->assign('template_variable_debug',$debug_html);
 		}
 
+		if (!is_dir($this->smarty->compile_dir)) {
+			$path = $this->smarty->compile_dir;
+
+			$str  = "Compiled template directory not present";
+			$str .= "<p><b>Fix:</b> <code>mkdir -p $path; chmod a+rwx $path</code></p>";
+			$this->error_out($str,38913);
+		}
+
 		if (!is_writeable($this->smarty->compile_dir)) {
-			$path = $_SERVER['DOCUMENT_ROOT'] . "/" . dirname($_SERVER['SCRIPT_NAME']) . "/" . $this->smarty->compile_dir;
-			$path = preg_replace("/\/\//","/",$path);
+			$path = realpath($this->smarty->compile_dir);
 
 			$str  = "Cannot write to the compiled directory";
 			$str .= "<p><b>Fix:</b> <code>chmod a+rwx $path</code></p>";
