@@ -471,7 +471,7 @@ class Krumo
     public static function htmlHeaders()
     {
         if (!headers_sent()) {
-            header("Content-Type", "text/html");
+            header("Content-Type: text/html");
 
             // Print out a minimal page header
             print "<!DOCTYPE html><html><head><meta charset=\"" . static::getCharset() . "\"></head><body>";
@@ -561,6 +561,13 @@ class Krumo
         //////////////////////
         // Start HTML header//
         //////////////////////
+
+        // This is not 100% legit because you may have more than one DOCTYPE line with this in place
+        //
+        // Without this, if krumo() is your FIRST line of HTML the browser enters quirks modea due
+        // to the lack of a DOCTYPE line. That may cause the rest of your HTML rendering to be "off"
+        print "<!DOCTYPE html>\n";
+
         print "<div class=\"krumo-root\">\n";
         print "\t<ul class=\"krumo-node krumo-first\">\n";
 
@@ -568,7 +575,7 @@ class Krumo
         static::_dump($data);
 
         if ($showVersion || $showCallInfo) {
-            print "\t\t<li class=\"krumo-footnote\" onDblClick=\"toggle_expand_all();\">\n";
+            print "\t\t<li class=\"krumo-footnote\">\n";
 
             if ($showCallInfo && isset($d['file']) && $d['file']) {
                 print "<span class=\"krumo-call\" style=\"white-space:nowrap;\">";
@@ -818,8 +825,12 @@ class Krumo
             // the JS
             print "<script type=\"text/javascript\">\n";
 
-            $js_file = KRUMO_DIR . "/js/krumo.min.js";
-            if (is_readable($js_file)) {
+            $js_min_file = KRUMO_DIR . "/js/krumo.min.js";
+            $js_file     = KRUMO_DIR . "/js/krumo.js";
+
+            if (is_readable($js_min_file)) {
+                $js_text = file_get_contents($js_min_file);
+            } elseif (is_readable($js_file)) {
                 $js_text = file_get_contents($js_file);
             } else {
                 $js_text = "// Missing JS file krumo.min.js\n";
@@ -1068,13 +1079,19 @@ class Krumo
         // recursion detected
         if ($_r > 0) {
             static::_recursion();
+            return;
         }
 
         // stain it
         static::_hive($data);
 
+        $count = 0;
+        if (is_countable($data)) {
+            $count = count($data);
+        }
+
         // render it
-        $collapsed = static::_isCollapsed(static::$_level, count($data)-1);
+        $collapsed = static::_isCollapsed(static::$_level, $count - 1);
         if ($collapsed) {
             $collapse_style = 'style="display: none;"';
         } else {
@@ -1218,12 +1235,7 @@ class Krumo
         }
 
         print "<li class=\"krumo-child\">";
-        print "<div class=\"krumo-element $elementClasses\"";
-
-        // If there is more than one, make a dropdown
-        if (count($data) > 0) {
-            print "onClick=\"krumo.toggle(this);\"";
-        }
+        print "<div class=\"krumo-element $elementClasses\" ";
 
         print "onMouseOver=\"krumo.over(this);\" onMouseOut=\"krumo.out(this);\">";
         print "<a class=\"krumo-name\">$name</a> <em class=\"krumo-type\">Array(<strong class=\"krumo-array-length\">";
@@ -1289,9 +1301,6 @@ class Krumo
         }
 
         print "<li class=\"krumo-child\"> <div class=\"krumo-element $elementClasses\"";
-        if (count($data) > 0) {
-            print 'onClick="krumo.toggle(this);"';
-        }
         print 'onMouseOver="krumo.over(this);" onMouseOut="krumo.out(this);">';
 
         $empty_str = '';
@@ -1542,6 +1551,26 @@ class Krumo
 
         $_ = htmlentities($_);
 
+        // Check for and highlight any leading or trailing spaces/tabs
+        if (preg_match("/^([ \t]+)|([ \t]+)$/", $data)) {
+            $has_leading  = preg_match("/^([ \t]s+)/", $data);
+            $has_trailing = preg_match("/([ \t]+)$/", $data);
+
+            if ($has_leading && $has_trailing) {
+                $title = "Note: String contains trailing and leading whitespace";
+            } elseif ($has_leading) {
+                $title = "Note: String contains leading whitespace";
+            } elseif ($has_trailing) {
+                $title = "Note: String contains trailing whitespace";
+            } else {
+                $title = "";
+            }
+
+            $icon = static::get_icon("information", $title);
+            $_    = preg_replace_callback( "/^([ \t]+)/", "static::convert_whitespace", $_);
+            $_    = preg_replace_callback( "/([ \t]+)$/", "static::convert_whitespace", $_);
+        }
+
         // Convert all the \r or \n to visible paragraph markers
         if ($display_cr) {
             $_ = preg_replace("/(\\r\\n|\\n|\\r)/", "<strong class=\"krumo-carrage-return\"> &para; </strong>", $_);
@@ -1556,9 +1585,6 @@ class Krumo
 
         print "<li class=\"krumo-child\">";
         print "<div class=\"krumo-element $expand_class\" ";
-        if ($_extra) {
-            print " onClick=\"krumo.toggle(this);\" ";
-        }
         print "onMouseOver=\"krumo.over(this);\" onMouseOut=\"krumo.out(this);\">\n";
 
         print "<a class=\"krumo-name\">$name</a> ";
@@ -1597,6 +1623,15 @@ class Krumo
         print "</li>";
     }
 
+    public static function convert_whitespace($m) {
+        $str = $m[0];
+
+        $len = strlen($str);
+        $ret = str_repeat("&#9251;", $len);
+
+        return $ret;
+    }
+
     /**
      * Detect if we're running in CLI mode`
      */
@@ -1619,7 +1654,7 @@ class Krumo
 
         $args = func_get_args();
         $args = array_shift($args);
-        if (sizeof($args) > 1) {
+        if (sizeof($args) >= 1) {
             print $bar;
         }
 
@@ -1627,9 +1662,9 @@ class Krumo
             $out = var_export($i);
             print trim($out);
 
-            if (sizeof($args) > 1) {
+            if (sizeof($args) >= 1) {
                 $version = static::version();
-                print "\n\nCalled from $file, line $line  (Krumo version $version)\n$bar";
+                print "\n\nCalled from $file, line $line  (Krumo version $version)\n$bar\n";
             }
         }
     }
@@ -1664,12 +1699,22 @@ if (!function_exists('k')) {
 if (!function_exists('kd')) {
     function kd()
     {
-        if (php_sapi_name() !== 'cli')
+
+        if (php_sapi_name() !== 'cli') {
             Krumo::htmlHeaders();
+        }
         $_ = func_get_args();
         call_user_func_array(array('krumo', 'dump'), $_);
 
         exit();
     }
 }
+
+// Polyfill for is_countable() from https://secure.php.net/manual/en/function.is-countable.php
+if (!function_exists('is_countable')) {
+    function is_countable($var) {
+        return (is_array($var) || $var instanceof Countable);
+    }
+}
+
 // vim: tabstop=4 shiftwidth=4 expandtab autoindent
