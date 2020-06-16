@@ -104,17 +104,16 @@ class trob {
 			$this->error_out("Cannot read template file \"$tpl_file\"",59186);
 		}
 
-		$debug = get_in($_GET,['debug']);
-
-		$this->assign('_js_scripts',$this->_js);
-		$this->assign('_css_scripts',$this->_css);
-		$this->assign('page_title',$this->page_title);
-
+		$debug          = $_GET['debug']        ?? 0;
+		$logged_in_user = $_SESSION['username'] ?? "";
 		$this->end_time = microtime(1);
+		$total_time     = sprintf("%.3f",$this->end_time - $this->start_time);
 
-		$total_time = sprintf("%.3f",$this->end_time - $this->start_time);
-		$this->assign('total_time',$total_time);
-		$this->assign('logged_in_user',get_in($_SESSION,['username']));
+		$this->assign('_js_scripts', $this->_js);
+		$this->assign('_css_scripts', $this->_css);
+		$this->assign('page_title', $this->page_title);
+		$this->assign('total_time', $total_time);
+		$this->assign('logged_in_user', $logged_in_user);
 
 		if ($debug) {
 			$smarty_tpl_vars = $this->smarty->getTemplateVars();
