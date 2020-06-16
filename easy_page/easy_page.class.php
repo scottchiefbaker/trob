@@ -54,10 +54,14 @@ class page {
 
 		session_start();
 
-		$this->smarty->template_dir = "tpls/";
-		$this->smarty->compile_dir  = "tpls/compiled/";
-		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
-		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
+		$this->smarty->template_dir    = "tpls/";
+		$this->smarty->compile_dir     = "tpls/compiled/";
+		$this->smarty->config_dir      = $this->base_dir . "/smarty/configs/";
+		$this->smarty->cache_dir       = $this->base_dir . "/smarty/cache/";
+
+		// Don't show missing template variables as E_NOTICE
+		// https://github.com/smarty-php/smarty/blob/master/README#L14
+		$this->smarty->error_reporting = E_ALL & ~E_NOTICE;
 
 		if (isset($opts['require_https']) && $_SERVER['HTTPS'] != 'on') {
 			print "You must access this site with SSL";
