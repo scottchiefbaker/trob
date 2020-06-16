@@ -12,6 +12,8 @@ class trob {
 	public $plugins       = array();
 	public $plugin_dir    = "";
 	public $page_title    = "";
+	public $_css          = [];
+	public $_js           = [];
 
 	function __construct($opts = array()) {
 		$this->smarty     = new Smarty();
