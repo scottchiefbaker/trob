@@ -22,24 +22,24 @@
 	<h3 id="main_header" class="bg-primary border border-dark rounded p-2 mt-3 mb-3 text-white">{$header}</h3>
 	{/if}
 
-	<div id="main_content">
+	<div id="main_content" class="bg-white rounded p-2 border">
 	{include file="$template_file"}
-	</div>
 
-	{if !empty($template_variable_debug)}
-	<div style="padding: 0 0.5em 0 0.5em;" id="debug_output">
-		<hr />
-		<div style="font-size: 0.75em;"><b><i>Smarty Template Variables:</b></i></div>
-		<div>{$template_variable_debug}</div>
-	</div>
-	{/if}
-
-	<hr class="mb-0" />
-	<div id="main_footer" class="row">
-		<div class="col">Rendered in <b>{$total_time}</b> seconds</div>
-		<div class="col text-right">
-		{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){/if}
+		<hr class="mb-0 mt-2" />
+		<div id="main_footer" class="row font-75">
+			<div class="col">Rendered in <b>{$total_time}</b> seconds</div>
+			<div class="col text-right">
+			{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){/if}
+			</div>
 		</div>
+
+		{if !empty($template_variable_debug)}
+		<div id="debug_output">
+			<hr />
+			<div style="font-size: 0.75em;"><b><i>Smarty Template Variables:</b></i></div>
+			<div>{$template_variable_debug}</div>
+		</div>
+		{/if}
 	</div>
 </div>
 
