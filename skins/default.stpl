@@ -8,6 +8,7 @@
 		<script type="text/javascript" src="{$file}"></script>
 		{/foreach}
 
+		<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" media="screen" href="css/default.css" title="Default" />
 
 		{foreach from=$_css_scripts item=file}
@@ -16,10 +17,14 @@
 	</head>
 <body>
 
-<div id="content_box">
-	<h2 id="header">{if !empty($header)}{$header}{else}&nbsp;{/if}</h2>
+<div class="container mt-3">
+	{if !empty($header)}
+	<h3 id="main_header" class="bg-primary border border-dark rounded p-2 mt-3 mb-3 text-white">{$header}</h3>
+	{/if}
 
-	<div id="content">{include file="$template_file"}</div>
+	<div id="main_content">
+	{include file="$template_file"}
+	</div>
 
 	{if !empty($template_variable_debug)}
 	<div style="padding: 0 0.5em 0 0.5em;" id="debug_output">
@@ -29,14 +34,13 @@
 	</div>
 	{/if}
 
-	<div id="footer">
-		<div id="footer_left">Rendered in <b>{$total_time}</b> seconds</div>
-		<div id="footer_right">
-		{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){else}&nbsp;{/if}
+	<hr class="mb-0" />
+	<div id="main_footer" class="row">
+		<div class="col">Rendered in <b>{$total_time}</b> seconds</div>
+		<div class="col text-right">
+		{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){/if}
 		</div>
-		<div style="clear: both;"></div>
 	</div>
-
 </div>
 
 </body>
