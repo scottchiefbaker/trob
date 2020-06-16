@@ -16,9 +16,9 @@ class trob {
 	function __construct($opts = array()) {
 		$this->smarty     = new Smarty();
 		$this->start_time = microtime(1);
-		$this->plugin_dir = dirname(__FILE__) . "/plugins/";
+		$this->plugin_dir = __DIR__ . "/plugins/";
 		$this->base_dir   = __DIR__ . "/";
-		$this->skin_dir   = $this->base_dir . "/skins/";
+		$this->skin_dir   = $this->base_dir . "skins/";
 		$this->config     = $this->load_config();
 
 		$db_config = $this->config['database'] ?? [];
@@ -32,10 +32,11 @@ class trob {
 
 		session_start();
 
-		$this->smarty->template_dir    = "tpls/";
-		$this->smarty->compile_dir     = "tpls/compiled/";
-		$this->smarty->config_dir      = $this->base_dir . "/smarty/configs/";
-		$this->smarty->cache_dir       = $this->base_dir . "/smarty/cache/";
+		// Note: the TPL/Compiled directory are relative to the .php file
+		$this->smarty->template_dir = "tpls/";
+		$this->smarty->compile_dir  = "tpls/compiled/";
+		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
+		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
 
 		// Don't show missing template variables as E_NOTICE
 		// https://github.com/smarty-php/smarty/blob/master/README#L14
@@ -144,7 +145,8 @@ class trob {
 
 		// Actually send the HTML to the browser
 		$this->assign('template_file',$tpl);
-		$this->smarty->display($this->skin_dir . "/default.stpl");
+		$skin_file = $this->skin_file ?? "default.stpl";
+		$this->smarty->display($this->skin_dir . $skin_file);
 
 		exit;
 	}
