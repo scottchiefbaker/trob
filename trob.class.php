@@ -144,7 +144,7 @@ class trob {
 
 		// Actually send the HTML to the browser
 		$this->assign('template_file',$tpl);
-		$this->smarty->display($this->skin_dir . "/global.stpl");
+		$this->smarty->display($this->skin_dir . "/default.stpl");
 
 		exit;
 	}
