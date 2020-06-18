@@ -30,7 +30,7 @@
 	{include file="$template_file"}
 
 		<hr class="mb-0 mt-2" />
-		<div id="main_footer" class="row font-75">
+		<div id="main_footer" class="row font-75 d-none">
 			<div class="col">Rendered in <b>{$total_time}</b> seconds</div>
 			<div class="col text-right">
 			{if $logged_in_user}<b>{$logged_in_user}</b> (<a href="login.php?logout=true">Logout</a>){/if}
