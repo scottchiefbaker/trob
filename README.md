@@ -22,7 +22,6 @@ $trob = new trob;
 
 $trob->assign("output", "Hello world!");
 $trob->display();
-
 ```
 
 Then create a smarty template file in a `tpls/` directory with a `.stpl` extension.
