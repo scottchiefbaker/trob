@@ -1,12 +1,8 @@
 <?PHP
 
-require('easy_page/easy_page.class.php');
-$p = new page();
+require("/home/bakers/github/trob/trob.class.php");
+$trob = new trob;
 
 /////////////////////////////////////////////////////////////////
 
-$p->display();
-
-##############################################################################
-
-?>
+$trob->display();

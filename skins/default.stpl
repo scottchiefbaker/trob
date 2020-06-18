@@ -3,13 +3,17 @@
 	<head>
 		<title>{$page_title}</title>
 
-		<script type="text/javascript" src="js/jquery.js"></script>
+		<link rel="stylesheet" type="text/css" media="screen" href="/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" media="screen" href="/css/default.css" title="Default" />
+
+		<script type="text/javascript" src="/js/jquery.js"></script>
+		<script type="text/javascript" src="/js/popper.min.js"></script>
+		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="/js/default.js"></script>
+
 		{foreach from=$_js_scripts item=file}
 		<script type="text/javascript" src="{$file}"></script>
 		{/foreach}
-
-		<link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.min.css" />
-		<link rel="stylesheet" type="text/css" media="screen" href="css/default.css" title="Default" />
 
 		{foreach from=$_css_scripts item=file}
 		<link rel="stylesheet" type="text/css" media="screen" href="{$file}" />
@@ -22,7 +26,7 @@
 	<h3 id="main_header" class="bg-primary border border-dark rounded p-2 mt-3 mb-3 text-white">{$header}</h3>
 	{/if}
 
-	<div id="main_content" class="bg-white rounded p-2 border">
+	<div id="main_content" class="p-2">
 	{include file="$template_file"}
 
 		<hr class="mb-0 mt-2" />
