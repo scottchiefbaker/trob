@@ -34,6 +34,17 @@ class trob {
 			$dsn  = $db_config['dsn']      ?? "";
 			$user = $db_config['username'] ?? null;
 			$pass = $db_config['password'] ?? null;
+
+			// If it's a SQLite DSN check to see if the file is readable
+			// This prevents a vanilla PDO error if the file cannot be read
+			if (preg_match("/sqlite2?:(.+)/", $dsn, $m)) {
+				$file = trim($m[1]);
+
+				if ($file !== ":memory:" && !is_readable($file)) {
+					$this->error_out("Unable to read SQLite database '$file'", 23812);
+				}
+			}
+
 			$this->dbq = new DBQuery($dsn, $user, $pass);
 		}
 
