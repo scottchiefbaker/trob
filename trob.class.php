@@ -30,7 +30,7 @@ class trob {
 
 		$db_config = $this->config['database'] ?? [];
 
-		if ($db_config) {
+		if (!empty($db_config['dsn'])) {
 			$dsn  = $db_config['dsn']      ?? "";
 			$user = $db_config['username'] ?? null;
 			$pass = $db_config['password'] ?? null;
