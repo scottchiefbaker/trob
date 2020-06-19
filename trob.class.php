@@ -14,7 +14,7 @@ class trob {
 	public $page_title    = "";
 	public $_css          = [];
 	public $_js           = [];
-	public $template      = "";
+	public $template_file = "";
 
 	function __construct($opts = array()) {
 		session_start();
@@ -99,11 +99,15 @@ class trob {
 	}
 
 	function display($tpl = "") {
-		if (!$tpl) {
+		// If no template is explicitly set use the base filename with a .stpl extension
+		if (empty($this->template_file)) {
 			$i = pathinfo($_SERVER['SCRIPT_NAME']);
 			$tpl = $i['filename'] . ".stpl";
 
 			$tpl = $this->tpl_dir . $tpl;
+		// There is an override to the default so we use that
+		} else {
+			$tpl = $this->tpl_dir . $this->template_file;
 		}
 
 		$tpl_file = $this->smarty->template_dir[0] . $tpl;
