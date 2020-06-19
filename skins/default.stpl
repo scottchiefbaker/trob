@@ -3,6 +3,9 @@
 	<head>
 		<title>{$page_title}</title>
 
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 		<link rel="stylesheet" type="text/css" media="screen" href="/css/bootstrap.min.css" />
 		<link rel="stylesheet" type="text/css" media="screen" href="/css/default.css" title="Default" />
 
@@ -11,6 +14,7 @@
 		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/js/default.js"></script>
 
+		<script type="text/javascript" src="js/jquery.js"></script>
 		{foreach from=$_js_scripts item=file}
 		<script type="text/javascript" src="{$file}"></script>
 		{/foreach}
@@ -21,7 +25,7 @@
 	</head>
 <body>
 
-<div class="{if $TPL_FULL_WIDTH}container-fluid{else}container{/if} mt-3">
+<div class="{if $TPL_FULL_WIDTH}container-fluid{else}container-lg{/if} mt-3">
 	{if !empty($header)}
 	<h3 id="main_header" class="bg-primary border border-dark rounded p-2 mt-3 mb-3 text-white">{$header}</h3>
 	{/if}
