@@ -14,14 +14,19 @@ class trob {
 	public $page_title    = "";
 	public $_css          = [];
 	public $_js           = [];
+	public $template      = "";
 
 	function __construct($opts = array()) {
-		$this->smarty     = new Smarty();
-		$this->start_time = microtime(1);
-		$this->plugin_dir = __DIR__ . "/plugins/";
-		$this->base_dir   = __DIR__ . "/";
-		$this->skin_dir   = $this->base_dir . "skins/";
-		$this->config     = $this->load_config();
+		session_start();
+
+		$this->start_time  = microtime(1);
+		$this->base_dir    = __DIR__ . "/";
+		$this->config_file = $opts['config_file'] ?? $this->base_dir . "trob.ini";
+		$this->config      = $this->load_config($this->config_file);
+
+		$config           = $this->config['trob'] ?? [];
+		$this->plugin_dir = $this->get_config_entry('plugin_dir', $config, $opts, __DIR__ . "/plugins/");
+		$this->skin_dir   = $this->get_config_entry('skin_dir', $config, $opts, __DIR__ . "/skins/");
 
 		$db_config = $this->config['database'] ?? [];
 
@@ -32,11 +37,10 @@ class trob {
 			$this->dbq = new DBQuery($dsn, $user, $pass);
 		}
 
-		session_start();
-
 		// Note: the TPL/Compiled directory are relative to the .php file
-		$this->smarty->template_dir = "tpls/";
-		$this->smarty->compile_dir  = "tpls/compiled/";
+		$this->smarty               = new Smarty();
+		$this->smarty->template_dir = $this->get_config_entry('tpl_dir', $config, $opts, "tpls/");
+		$this->smarty->compile_dir  = $this->get_config_entry('compiled_dir', $config, $opts, "tpls/compiled");
 		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
 		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
 
@@ -212,8 +216,7 @@ class trob {
 		}
 	}
 
-	function load_config() {
-		$file = $this->base_dir . "/config.ini";
+	function load_config($file) {
 		if (!is_readable($file)) {
 			return null;
 		}
@@ -223,4 +226,24 @@ class trob {
 		return $ret;
 	}
 
+	// Fetch an item from the config, then opts, and finally a default value
+	function get_config_entry($section, $config, $opts, $default_value) {
+		// Look for configuration informat in the following order
+		// 1. Config file
+		// 2. Options passed to the constructor at runtime
+		// 3. Default value
+
+		if (isset($config[$section])) {
+			$ret = $config[$section];
+			//k("Got $section from config");
+		} elseif (isset($opts[$section])) {
+			$ret = $opts[$section];
+			//k("Got $section from runtime options");
+		} else {
+			$ret = $default_value;
+			//k("Using the default value for $section");
+		}
+
+		return $ret;
+	}
 }
