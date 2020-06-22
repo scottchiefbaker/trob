@@ -172,12 +172,30 @@ class trob {
 		exit;
 	}
 
-	function error_out($str,$num = '') {
-		if ($num) {
-			print "<p><b>Error #$num:</b> $str</p>";
-		} else {
-			print "<p><b>Error:</b> $str</p>";
-		}
+	function error_out($str, $num) {
+		$err_html = "<!DOCTYPE html>
+<html lang=\"en\">
+	<head>
+		<title>Trob error: #$num</title>
+
+		<meta charset=\"utf-8\">
+		<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">
+
+		<style>
+			body {
+				font-family: 'Open Sans', Helvetica, sans;
+				padding: 0px 20px;
+			}
+		</style>
+	</head>
+<body>
+	<h1>Trob error #$num</h1>
+	<div>
+		<b>Message:</b> $str
+	</div>
+</body>
+</html>";
+		print $err_html;
 
 		exit;
 	}
