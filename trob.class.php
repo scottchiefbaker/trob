@@ -17,6 +17,7 @@ class trob {
 	public $template_file = "";
 
 	function __construct($opts = array()) {
+		session_set_cookie_params(86400 * 180);
 		session_start();
 
 		$this->start_time  = microtime(1);
@@ -64,34 +65,29 @@ class trob {
 			exit;
 		}
 
-		if (isset($opts['require_login']) && !$this->is_logged_in()) {
-			print "<h1>404 - Page not found</h1>";
+		if (!empty($opts['require_login']) && !$this->is_logged_in()) {
+			header("WWW-Authenticate: Basic realm=\"Page Login\"");
+			header('HTTP/1.0 401 Unauthorized');
+			echo 'User has cancelled';
+			exit;
 		}
 	}
 
 	function is_logged_in() {
-		$realm_name = "Easy Page Login";
-		$remote_ip  = $_SERVER['REMOTE_ADDR'];
+		$remote_ip = $_SERVER['REMOTE_ADDR'];
+		$user      = $_SERVER['PHP_AUTH_USER'] ?? "trob";
+		$pass      = $_SERVER['PHP_AUTH_PW']   ?? "";
 
-		$user = $_SERVER['PHP_AUTH_USER'];
-		$pass = $_SERVER['PHP_AUTH_PW'];
+		// php -r 'print password_hash("Foobar", PASSWORD_DEFAULT);'
+		$cipher_pwd = '$2y$10$wuF1.TxZBBi9v9eCDFbp2ukVlpfluDGv3uMf.rtbqcHv1mRYqpsve';
+		$valid_pwd  = password_verify($pass, $cipher_pwd);
 
-		$auth_pass = 'cd57aca0fa2b063517c6c102a3359c21';
+		if (!empty($_SESSION['user'])) {
+			return $_SESSION['user'];
+		} elseif ($valid_pwd) {
+			$_SESSION['user'] = $user;
 
-		if ($_COOKIE['EasyPageAuth'] == $auth_pass) {
 			return 1;
-		} elseif (md5($pass) == $auth_pass) {
-			$time = time() + 86400 * 30;
-			setcookie("EasyPageAuth", $auth_pass, $time);
-
-			return 1;
-		} elseif ($this->is_trusted_ip($remote_ip)) {
-			return 1;
-		} else {
-			header("WWW-Authenticate: Basic realm=\"$realm_name\"");
-			header('HTTP/1.0 401 Unauthorized');
-			echo 'Text to send if user hits Cancel button';
-			exit;
 		}
 
 		return 0;
