@@ -275,4 +275,17 @@ class trob {
 
 		return $ret;
 	}
+
+	// Convert a PHP data structure to JSON and optionally send it to the browser
+	function send_json($hash,$return = 0) {
+		$output = json_encode($hash);
+
+		if ($return) {
+			return $output;
+		} else {
+			header('Content-type: application/json'); // http://tools.ietf.org/html/rfc4627
+			print $output;
+			exit;
+		}
+	}
 }
