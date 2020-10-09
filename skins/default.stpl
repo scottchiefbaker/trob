@@ -14,7 +14,6 @@
 		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
 		<script type="text/javascript" src="/js/default.js"></script>
 
-		<script type="text/javascript" src="js/jquery.js"></script>
 		{foreach from=$_js_scripts item=file}
 		<script type="text/javascript" src="{$file}"></script>
 		{/foreach}
