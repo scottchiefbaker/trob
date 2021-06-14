@@ -10,8 +10,7 @@
 		<link rel="stylesheet" type="text/css" media="screen" href="/css/default.css" title="Default" />
 
 		<script type="text/javascript" src="/js/jquery.js"></script>
-		<script type="text/javascript" src="/js/popper.min.js"></script>
-		<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
 		<script type="text/javascript" src="/js/default.js"></script>
 
 		{foreach from=$_js_scripts item=file}
