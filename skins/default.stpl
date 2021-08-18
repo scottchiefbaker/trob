@@ -40,9 +40,8 @@
 		</div>
 
 		{if !empty($template_variable_debug)}
-		<div id="debug_output">
-			<hr />
-			<div style="font-size: 0.75em;"><b><i>Smarty Template Variables:</b></i></div>
+		<div id="debug_output" class="mt-2">
+			<div style="font-size: 0.75em;"><b><i>Smarty v{$smarty.version} Template Variables:</b></i></div>
 			<div>{$template_variable_debug}</div>
 		</div>
 		{/if}
