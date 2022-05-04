@@ -23,7 +23,7 @@
 	</head>
 <body>
 
-<div class="{if $TPL_FULL_WIDTH}container-fluid{else}container-lg{/if} mt-3">
+<div class="{if !empty($TPL_FULL_WIDTH)}container-fluid{else}container-lg{/if} mt-3">
 	{if !empty($header)}
 	<h3 id="main_header" class="bg-primary border border-dark rounded p-2 mt-3 mb-3 text-white">{$header}</h3>
 	{/if}
