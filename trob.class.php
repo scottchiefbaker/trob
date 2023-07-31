@@ -17,13 +17,14 @@ class trob {
 	public $template_file = "";
 
 	function __construct($opts = array()) {
-		session_set_cookie_params(86400 * 180);
-		session_start();
-
 		$this->start_time  = microtime(1);
 		$this->base_dir    = __DIR__ . "/";
 		$this->config_file = $opts['config_file'] ?? $this->base_dir . "trob.ini";
 		$this->config      = $this->load_config($this->config_file);
+		$session_length    = $this->get_config_entry('skin_dir', $config['session'] ?? [], $opts, 86400 * 30);
+
+		session_set_cookie_params($session_length);
+		session_start();
 
 		$config           = $this->config['trob'] ?? [];
 		$this->plugin_dir = $this->get_config_entry('plugin_dir', $config, $opts, __DIR__ . "/plugins/");
@@ -59,6 +60,7 @@ class trob {
 		// Don't show missing template variables as E_NOTICE
 		// https://github.com/smarty-php/smarty/blob/master/README#L14
 		$this->smarty->error_reporting = E_ALL & ~E_NOTICE;
+		$this->smarty->muteUndefinedOrNullWarnings(true);
 
 		if (isset($opts['require_https']) && $_SERVER['HTTPS'] != 'on') {
 			print "You must access this site with SSL";
