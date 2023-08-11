@@ -45,7 +45,7 @@ if (!defined('KRUMO_NO_SORT')) {
 */
 class Krumo
 {
-    const VERSION = '0.6.1';
+    const VERSION = '0.7.0';
 
     /**
      * Return Krumo version
@@ -499,8 +499,12 @@ class Krumo
         $_ = debug_backtrace();
         while ($d = array_pop($_)) {
             $callback = static::$lineNumberTestCallback;
-            $function = strToLower($d['function']);
-            if (in_array($function, array("krumo","k","kd")) || (strToLower(@$d['class']) == 'krumo') || (is_callable($callback) && call_user_func($callback, $d))) {
+
+            $class         = strtolower($d['class']    ?? '');
+            $function      = strtolower($d['function'] ?? '');
+            $is_krumo_func = in_array($function, array('krumo','k','kd'));
+
+            if ($is_krumo_func || $class == 'krumo' || (is_callable($callback) && call_user_func($callback, $d))) {
                 break;
             }
         }
@@ -1424,7 +1428,7 @@ class Krumo
     private static function is_datetime($name, $value)
     {
         // If the name contains date or time, and the value looks like a unixtime
-        if (preg_match("/date|time/i", $name) && ($value > 10000000 && $value < 4000000000)) {
+        if (preg_match("/date|time/i", $name) && (is_numeric($value) && $value > 10000000 && $value < 4000000000)) {
             $ret = date("r", $value);
 
             return $ret;
@@ -1607,7 +1611,7 @@ class Krumo
         }
 
         foreach ($args as $i) {
-            $out = var_export($i);
+            $out = var_export($i) ?? '';
             print trim($out);
 
             if (sizeof($args) >= 1) {
