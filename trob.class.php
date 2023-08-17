@@ -15,6 +15,13 @@ class trob {
 	public $_css          = [];
 	public $_js           = [];
 	public $template_file = "";
+	public $start_time    = 0;
+	public $base_dir      = "";
+	public $config_file   = "";
+	public $config        = "";
+	public $skin_dir      = "";
+	public $smarty        = "";
+	public $end_time      = "";
 
 	function __construct($opts = array()) {
 		$this->start_time  = microtime(1);
