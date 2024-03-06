@@ -13,6 +13,10 @@
 		<script type="text/javascript" src="/js/bootstrap.bundle.min.js"></script>
 		<script type="text/javascript" src="/js/default.js"></script>
 
+		{if $page_refresh}
+		<meta http-equiv="refresh" content="{$page_refresh}">
+		{/if}
+
 		{foreach from=$_js_scripts item=file}
 		<script type="text/javascript" src="{$file}"></script>
 		{/foreach}
