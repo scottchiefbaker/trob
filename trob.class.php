@@ -3,6 +3,8 @@
 $conf_dir = __DIR__;
 
 require("$conf_dir/include/smarty/libs/Smarty.class.php");
+use Smarty\Smarty;
+
 require("$conf_dir/include/krumo/class.krumo.php");
 require("$conf_dir/include/db_query/db_query.class.php");
 
@@ -58,11 +60,11 @@ class trob {
 		}
 
 		// Note: the TPL/Compiled directory are relative to the .php file
-		$this->smarty               = new Smarty();
-		$this->smarty->template_dir = $this->get_config_entry('tpl_dir', $config, $opts, "tpls/");
-		$this->smarty->compile_dir  = $this->get_config_entry('compiled_dir', $config, $opts, "tpls/compiled");
-		$this->smarty->config_dir   = $this->base_dir . "/smarty/configs/";
-		$this->smarty->cache_dir    = $this->base_dir . "/smarty/cache/";
+		$this->smarty = new Smarty();
+		$this->smarty->setTemplateDir($this->get_config_entry('tpl_dir', $config, $opts, "tpls/"));
+		$this->smarty->setCompileDir($this->get_config_entry('compiled_dir', $config, $opts, "tpls/compiled"));
+		$this->smarty->setConfigDir($this->base_dir . "/smarty/configs/");
+		$this->smarty->setCacheDir($this->base_dir . "/smarty/cache/");
 
 		// Don't show missing template variables as E_NOTICE
 		// https://github.com/smarty-php/smarty/blob/master/README#L14
@@ -126,7 +128,8 @@ class trob {
 			$tpl = $this->tpl_dir . $this->template_file;
 		}
 
-		$tpl_file = $this->smarty->template_dir[0] . $tpl;
+		$tpl_dir  = $this->smarty->getTemplateDir();
+		$tpl_file = $tpl_dir[0] . $tpl;
 		if (!is_readable($tpl_file)) {
 			$this->error_out("Cannot read template file \"$tpl_file\"",59186);
 		}
@@ -153,16 +156,17 @@ class trob {
 			$this->assign('template_variable_debug',$debug_html);
 		}
 
-		if (!is_dir($this->smarty->compile_dir)) {
-			$path = $this->smarty->compile_dir;
+		$compile_dir = $this->smarty->getCompileDir();
+		if (!is_dir($compile_dir)) {
+			$path = $compile_dir;
 
 			$str  = "Compiled template directory not present";
 			$str .= "<p><b>Fix:</b> <code>mkdir -p $path; chmod a+rwx $path</code></p>";
 			$this->error_out($str,38913);
 		}
 
-		if (!is_writeable($this->smarty->compile_dir)) {
-			$path = realpath($this->smarty->compile_dir);
+		if (!is_writeable($compile_dir)) {
+			$path = realpath($compile_dir);
 
 			$str  = "Cannot write to the compiled directory";
 			$str .= "<p><b>Fix:</b> <code>chmod a+rwx $path</code></p>";
