@@ -1,6 +1,6 @@
 <?php
 
-define("DB_QUERY_VERSION","1.0.2");
+define("DB_QUERY_VERSION","1.1.1");
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -14,6 +14,7 @@ class DBQuery {
 	var $dbh                     = null;
 	var $query_log               = "";
 	var $record_limit            = 10000; // Don't return more than X records to prevent memory exhaustion
+	var $db_query_info           = [];
 
 	private $dsn           = "";
 	private $user          = "";
@@ -82,7 +83,17 @@ class DBQuery {
 		// If there is a SQL command, run it
 		if ($sql) {
 			// Prepare the command
-			$sth = $dbh->prepare($sql);
+			try {
+				$sth = $dbh->prepare($sql);
+			} catch (Exception $e) {
+				if ($show_errors) {
+					$msg = "Exception: " . $e->getMessage() . "\n";
+					$this->error_out($msg, 23489);
+				}
+
+				return false;
+			}
+
 			if (!$sth) {
 				list($sql_error_code,$driver_error_code,$err_text) = $dbh->errorInfo();
 
@@ -114,7 +125,17 @@ class DBQuery {
 			}
 
 			// Execute the command with the appropriate replacement variables (if any)
-			$sth->execute($prepare_values);
+			try {
+				$sth->execute($prepare_values);
+			} catch (Exception $e) {
+				if ($show_errors) {
+					$msg = "Exception: " . $e->getMessage() . "\n";
+					$this->error_out($msg, 48203);
+				}
+
+				return false;
+			}
+
 			$affected_rows = $sth->rowCount();
 			$err = $sth->errorInfo();
 
@@ -181,7 +202,7 @@ class DBQuery {
 
 			$info['called_from_file'] = $i[$num]['file'];
 			$info['called_from_line'] = $i[$num]['line'];
-			$this->db_query_info[] = $info;
+			$this->db_query_info[]    = $info;
 
 			return true;
 		}
@@ -221,7 +242,14 @@ class DBQuery {
 		// Key/Value where the first field is the key, and the second field is the value
 		} elseif ($return_type == 'key_value') {
 			while ($data = $sth->fetch(PDO::FETCH_NUM)) {
-				$ret[$data[0]] = $data[1];
+				// Floats have to be converted to strings to avoid an E_WARNING
+				if (is_float($data[0])) {
+					$key = sprintf("%0.2f", $data[0]);
+				} else {
+					$key = $data[0];
+				}
+
+				$ret[$key] = $data[1];
 			}
 		// Key/Value where we get a specific key/value from a larger list
 		} elseif (preg_match("/key_pair:(.+?),(.+)/",$return_type,$m)) {
@@ -369,7 +397,7 @@ class DBQuery {
 
 		$info['called_from_file'] = $i[$num]['file'];
 		$info['called_from_line'] = $i[$num]['line'];
-		$this->db_query_info[] = $info;
+		$this->db_query_info[]    = $info;
 
 		// Log to a file if need be
 		if (!empty($this->query_log) && is_writable($this->query_log)) {
