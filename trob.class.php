@@ -24,7 +24,7 @@ class trob {
 	public $skin_dir      = "";
 	public $smarty        = "";
 	public $end_time      = "";
-	public $version       = 0.7;
+	public $version       = 0.8;
 
 	function __construct($opts = array()) {
 		$this->start_time  = microtime(1);
