@@ -67,6 +67,8 @@ class trob {
 		$this->smarty->setConfigDir($this->base_dir . "/smarty/configs/");
 		$this->smarty->setCacheDir($this->base_dir . "/smarty/cache/");
 
+		require_once("smarty_modifiers.php");
+
 		// Don't show missing template variables as E_NOTICE
 		// https://github.com/smarty-php/smarty/blob/master/README#L14
 		$this->smarty->error_reporting = E_ALL & ~E_NOTICE;
